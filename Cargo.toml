@@ -7,6 +7,7 @@ license = "MIT"
 authors = ["Eduardo Neville <eduardoneville82@gmail.com>"]
 readme="README.md"
 repository = "https://github.com/EduardoNeville/ask_ai"
+documentation = "https://docs.rs/ask_ai"
 
 [lib]
 name = "ask_ai"

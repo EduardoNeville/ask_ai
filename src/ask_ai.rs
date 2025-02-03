@@ -403,6 +403,72 @@ async fn get_openai_response(question: Question, ai_config: &AiConfig) -> Result
 ///#### Return:
 ///
 ///- **`Result<String>`**: Returns the model's response on success or an application-defined error (`AppError`) in case of failure.
+///### Examples
+///
+///### 1. Basic Example (Ask a Single Question)
+///
+///You can ask a one-off question using the following example:
+///
+///```rust
+///use ask_ai::{config::{AiConfig, Framework, Question}, model::ask_question};
+///
+///#[tokio::main]
+///async fn main() {
+///    let ai_config = AiConfig {
+///        llm: Framework::OpenAI,
+///        model: "chatgpt-4o-latest".to_string(),
+///        max_token: Some(1000),
+///    };
+///
+///    let question = Question {
+///        system_prompt: None,      // Optional system prompt
+///        messages: None,           // No previous history
+///        new_prompt: "What is Rust?".to_string(),
+///    };
+///
+///    match ask_question(&ai_config, question).await {
+///        Ok(answer) => println!("Answer: {}", answer),
+///        Err(e) => eprintln!("Error: {}", e),
+///    }
+///}
+///```
+///
+///### 2. Customizing System Prompts
+///
+///A system-level prompt modifies the assistant's behavior. For example, you might instruct the assistant to answer concisely or role-play as an expert.
+///
+///```rust
+///let question = Question {
+///    system_prompt: Some("You are an expert Rust programmer. Answer concisely.".to_string()), // Custom prompt
+///    messages: None,
+///    new_prompt: "How do closures work in Rust?".to_string(),
+///};
+///```
+///
+///### 3. Multi-Turn Conversation (With Chat History)
+///
+///To maintain a conversation, you can include previous messages and their respective responses.
+///
+///```rust
+///use ask_ai::config::{AiPrompt};
+///
+///let previous_messages = vec![
+///    AiPrompt {
+///        content: "What is Rust?".to_string(),
+///        output: "Rust is a systems programming language focused on safety, speed, and concurrency.".to_string(),
+///    },
+///    AiPrompt {
+///        content: "Why is Rust popular?".to_string(),
+///        output: "Rust is popular because of features like memory safety, modern tooling, and high performance.".to_string(),
+///    },
+///];
+///
+///let question = Question {
+///    system_prompt: None,
+///    messages: Some(previous_messages), // Include chat history
+///    new_prompt: "What are Rust's main drawbacks?".to_string(),
+///};
+///```
 pub async fn ask_question(ai_config: &AiConfig, question: Question) -> Result<String> {
     match ai_config.llm {
         Framework::OpenAI => {
