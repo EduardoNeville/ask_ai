@@ -1,10 +1,10 @@
 [package]
-name = "ai_api_rs"
+name = "ask_ai"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "ai_api_rs"
+name = "ask_ai"
 path = "src/lib.rs"
 
 [dependencies]

@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 
 /// Enum for different LLM providers
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
-#[serde(rename_all = "lowercase")] // Serialize Enums as lowercase strings
+#[serde(rename_all = "lowercase")]
 pub enum LLM {
     OpenAI,
     Anthropic,
@@ -13,7 +13,7 @@ pub enum LLM {
 pub struct AiConfig {
     pub llm: LLM,
     pub model: String,
-    pub max_token: Option<u32>, // Optional, defaults to some number in the code
+    pub max_token: Option<u32>, // Optional, defaults to some number provided by LLM API
 }
 
 #[derive(Debug)]

@@ -6,21 +6,25 @@ use crate::config::LLM;
 #[derive(Debug)]
 pub enum AppError {
     ModelError {
-        model_name: String,
-        failure_str: String,
+        model_name: String,     // Name of the faulty model
+        failure_str: String,    // Detailed explanation of the error
     },
     ApiError {
-        model_name: LLM,
-        failure_str: String,
+        model_name: LLM,        // LLM provider (OpenAI, Anthropic, Ollama)
+        failure_str: String,    // Detailed explanation of the error
     },
-    UnexpectedError(String),
+    UnexpectedError(String),    // Catch-all for unexpected issues
 }
 
 /// Implement `std::fmt::Display` for `AppError`.
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            AppError::UnexpectedError(msg) => write!(f, "Unexpected or unknown error: {}", msg),
+            AppError::UnexpectedError(msg) => write!(
+                f,
+                "Unexpected or unknown error: {}",
+                msg
+            ),
             AppError::ModelError {
                 model_name,
                 failure_str,

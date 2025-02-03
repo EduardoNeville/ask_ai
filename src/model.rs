@@ -24,7 +24,32 @@ use anyhow::Result;
 use crate::config::{AiConfig, LLM, Question};
 use crate::error::AppError;
 
-
+///### `get_ollama_response`
+///
+///An internal function that interacts with Ollama's API. Called when the LLM provider is `LLM::Ollama`.
+///
+///---
+///
+///#### Signature:
+///
+///```rust
+///async fn get_ollama_response(question: Question, user_config: &AiConfig) -> Result<String>
+///```
+///
+///---
+///
+///#### Parameters:
+///
+///1. `question`: 
+///   - A `Question` struct with details of the system prompt, prior conversation, and user input.
+///2. `user_config`: 
+///   - Specifies the configured model and parameters for Ollama interaction.
+///
+///---
+///
+///#### Example Usage:
+///
+///This function is internal and used exclusively through `ask_question`.
 async fn get_ollama_response(question: Question, user_config: &AiConfig) -> Result<String> {
     let mut ollama = Ollama::default();
 
@@ -105,6 +130,33 @@ async fn get_ollama_response(question: Question, user_config: &AiConfig) -> Resu
     Ok(answer)
 }
 
+///### `get_anthropic_response`
+///
+///This internal function queries Anthropic's API to get a response from a Claude model (e.g., Claude-1, Claude-2). It is called by `ask_question` when the `LLM::Anthropic` is used in `AiConfig`.
+///
+///---
+///
+///#### Signature:
+///
+///```rust
+///async fn get_anthropic_response(question: Question, user_config: &AiConfig) -> Result<String>
+///```
+///
+///---
+///
+///#### Parameters:
+///
+///1. `question`: 
+///   - A `Question` struct containing the system prompt, past messages, and user query.
+///2. `user_config`: 
+///   - A configuration object specifying the Anthropic LLM model and optional maximum token limit.
+///
+///---
+///
+///#### Example Usage:
+///
+///This function is also internal and should not be called directly. Use invocation through `ask_question`.
+///
 async fn get_anthropic_response(question: Question, user_config: &AiConfig) -> Result<String> {
     let api_key = std::env::var("ANTHROPIC_API_KEY").map_err(|e| {
         AppError::ApiError { 
@@ -203,7 +255,33 @@ async fn get_anthropic_response(question: Question, user_config: &AiConfig) -> R
     Ok(answer)
 }
 
-/// This function is used to query using the openai API
+///### `get_openai_response`
+///
+///This is an internal function that interacts directly with OpenAI's API. It's called by `ask_question` when the configured `LLM` is `LLM::OpenAI`.
+///
+///---
+///
+///#### Signature:
+///
+///```rust
+///async fn get_openai_response(question: Question, user_config: &AiConfig) -> Result<String>
+///```
+///
+///---
+///
+///#### Parameters:
+///
+///1. `user_config`: 
+///   - Contains the user's configurations for the LLM provider, including the OpenAI model to query (`gpt-3.5-turbo`, `gpt-4`, etc.).
+///
+///2. `question`: 
+///   - A struct used to specify details about the prompt, context, and user question when querying OpenAI API.
+///
+///---
+///
+///#### Example Usage:
+///
+///This function is not meant to be directly used by end-users. Instead, it gets invoked through the `ask_question` function when the `llm` field of `AiConfig` is set to `LLM::OpenAI`.
 async fn get_openai_response(question: Question, user_config: &AiConfig) -> Result<String> {
     // Retrieve the OpenAI API key from the environment securely
     let api_key =
@@ -293,6 +371,38 @@ async fn get_openai_response(question: Question, user_config: &AiConfig) -> Resu
     Ok(answer)
 }
 
+
+
+///### `ask_question`
+///
+///This function is the main entry point for querying one of the supported LLMs (OpenAI, Anthropic, or Ollama). It uses the provided configuration (`AiConfig`) and the inputs (`Question`) to produce a response from the AI model.
+///
+///---
+///
+///#### Signature: 
+///
+///```rust
+///pub async fn ask_question(user_config: &AiConfig, question: Question) -> Result<String>
+///```
+///
+///---
+///
+///#### Parameters:
+///
+///1. `user_config`: 
+///   - A struct of type `AiConfig` that specifies which LLM provider, model, and optional maximum token limit to use. It wraps the properties of the model and provider required to query the LLM.
+///
+///2. `question`: 
+///   - A struct of type `Question` struct containing:
+///     - `system_prompt`: Optional prompt instructing the AI on how to behave or respond.
+///     - `messages`: Optional list of prior chat messages (for maintaining conversation context).
+///     - `user_input`: The user's current question or input.
+///
+///---
+///
+///#### Return:
+///
+///- **`Result<String>`**: Returns the model's response on success or an application-defined error (`AppError`) in case of failure.
 pub async fn ask_question(user_config: &AiConfig, question: Question) -> Result<String> {
     match user_config.llm {
         LLM::OpenAI => {
