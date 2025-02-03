@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 /// Enum for different LLM providers
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
-pub enum LLM {
+pub enum Framework {
     OpenAI,
     Anthropic,
     Ollama,
@@ -11,7 +11,7 @@ pub enum LLM {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AiConfig {
-    pub llm: LLM,
+    pub llm: Framework,
     pub model: String,
     pub max_token: Option<u32>, // Optional, defaults to some number provided by LLM API
 }
@@ -25,6 +25,6 @@ pub struct AiPrompt {
 pub struct Question {
     pub system_prompt: Option<String>,
     pub messages: Option<Vec<AiPrompt>>,
-    pub user_input: String,
+    pub new_prompt: String,
 }
 

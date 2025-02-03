@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt;
 
-use crate::config::LLM;
+use crate::config::Framework;
 
 #[derive(Debug)]
 pub enum AppError {
@@ -10,7 +10,7 @@ pub enum AppError {
         failure_str: String,    // Detailed explanation of the error
     },
     ApiError {
-        model_name: LLM,        // LLM provider (OpenAI, Anthropic, Ollama)
+        model_name: Framework,        // Framework provider (OpenAI, Anthropic, Ollama)
         failure_str: String,    // Detailed explanation of the error
     },
     UnexpectedError(String),    // Catch-all for unexpected issues
