@@ -167,7 +167,7 @@ Contributions, bug reports, and feature requests are welcome! Feel free to open 
 ### How to Contribute:
 
 1. Fork the repository.
-2. Clone to your local system: `git clone <your-fork-url>`
+2. Clone to your local system: `git clone https://github.com/EduardoNeville/ask_ai`
 3. Create a feature branch: `git checkout -b feature-name`
 4. Push changes and open a pull request.
 
