@@ -1,3 +1,7 @@
+[![Crates.io](https://img.shields.io/crates/v/ask_ai.svg)](https://crates.io/crates/ask_ai)
+[![Docs.rs](https://docs.rs/ask_ai/badge.svg)](https://docs.rs/ask_ai)
+![CI](https://github.com/EduardoNeville/ask_ai/actions/workflows/ci.yml/badge.svg)
+
 # AI Question-Answering Crate
 
 This Rust crate provides a unified way to call different Large Language Model (Framework) providers, including OpenAI, Anthropic, and Ollama, enabling the user to ask questions and interact with these models seamlessly. The crate abstracts away the complexities of interacting with different Framework APIs and offers a unified interface to query these models.
