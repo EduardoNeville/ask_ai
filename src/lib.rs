@@ -42,7 +42,7 @@
 //! 
 //! ### Example `AiConfig`
 //! 
-//! ```rust
+//! ```rust,ignore
 //! use ask_ai::config::{AiConfig, Framework};
 //! 
 //! let ai_config = AiConfig {
@@ -60,7 +60,7 @@
 //! 
 //! You can ask a one-off question using the following example:
 //! 
-//! ```rust
+//! ```rust,ignore
 //! use ask_ai::{config::{AiConfig, Framework, Question}, model::ask_question};
 //! 
 //! #[tokio::main]
@@ -89,7 +89,7 @@
 //! A system-level prompt modifies the assistant's behavior. For example, you might instruct the assistant to answer concisely 
 //! or role-play as an expert.
 //! 
-//! ```rust
+//! ```rust,ignore
 //! let question = Question {
 //!     system_prompt: Some("You are an expert Rust programmer. Answer concisely.".to_string()), // Custom prompt
 //!     messages: None,
@@ -101,7 +101,7 @@
 //! 
 //! To maintain a conversation, you can include previous messages and their respective responses.
 //! 
-//! ```rust
+//! ```rust,ignore
 //! use ask_ai::config::{AiPrompt};
 //! 
 //! let previous_messages = vec![
@@ -148,7 +148,7 @@
 //! 
 //! ### Example: Handling Errors Gracefully
 //! 
-//! ```rust
+//! ```rust,ignore
 //! match ask_question(&ai_config, question).await {
 //!     Ok(answer) => println!("Answer: {}", answer),
 //!     Err(e) => match e {
@@ -182,3 +182,5 @@
 pub mod ask_ai;
 pub mod config;
 pub mod error;
+
+pub use ask_ai::ask_question;

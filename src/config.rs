@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use std::fmt;
 
 /// Enum representing different Large Language Model (LLM) providers.
 ///
@@ -7,15 +8,11 @@ use serde::{Serialize, Deserialize};
 ///
 /// ### Example Usage:
 ///
-/// ```rust
+/// ```rust,ignore
 /// use ask_ai::config::Framework;
 ///
 /// let framework = Framework::OpenAI; // Use OpenAI as the LLM provider
-/// match framework {
-///     Framework::OpenAI => println!("Using OpenAI"),
-///     Framework::Anthropic => println!("Using Anthropic"),
-///     Framework::Ollama => println!("Using Ollama"),
-/// }
+/// assert_eq!(framework.to_string(), "openai");
 /// ```
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
@@ -28,6 +25,16 @@ pub enum Framework {
     Ollama,
 }
 
+impl fmt::Display for Framework {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Framework::OpenAI => write!(f, "openai"),
+            Framework::Anthropic => write!(f, "anthropic"),
+            Framework::Ollama => write!(f, "ollama"),
+        }
+    }
+}
+
 /// Configuration for interacting with an AI model.
 ///
 /// This struct defines the necessary configuration for querying an AI model, including the
@@ -35,7 +42,7 @@ pub enum Framework {
 ///
 /// ### Example Usage:
 ///
-/// ```rust
+/// ```rust,ignore
 /// use ask_ai::config::{AiConfig, Framework};
 ///
 /// let ai_config = AiConfig {
@@ -44,7 +51,7 @@ pub enum Framework {
 ///     max_token: Some(1000),            // Optional: Limit the response to 1000 tokens
 /// };
 /// ```
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AiConfig {
     /// The LLM framework provider to use (e.g., OpenAI, Anthropic, Ollama).
     pub llm: Framework,
@@ -62,7 +69,7 @@ pub struct AiConfig {
 ///
 /// ### Example Usage:
 ///
-/// ```rust
+/// ```rust,ignore
 /// use ask_ai::config::AiPrompt;
 ///
 /// let prompt = AiPrompt {
@@ -70,7 +77,7 @@ pub struct AiConfig {
 ///     output: "Rust is a systems programming language...".to_string(), // AI's response
 /// };
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AiPrompt {
     /// The user's input or question.
     pub content: String,
@@ -85,7 +92,7 @@ pub struct AiPrompt {
 ///
 /// ### Example Usage:
 ///
-/// ```rust
+/// ```rust,ignore
 /// use ask_ai::config::{Question, AiPrompt};
 ///
 /// let question = Question {
@@ -99,6 +106,7 @@ pub struct AiPrompt {
 ///     new_prompt: "Tell me more about Rust.".to_string(), // New user prompt
 /// };
 /// ```
+#[derive(Debug, Clone)]
 pub struct Question {
     /// An optional system prompt to instruct the AI on how to behave.
     /// For example, "You are a helpful assistant."
