@@ -1,3 +1,17 @@
+//! [![Crates.io](https://img.shields.io/crates/v/ask_ai.svg)](https://crates.io/crates/ask_ai)
+//! [![Docs.rs](https://docs.rs/ask_ai/badge.svg)](https://docs.rs/ask_ai)
+//! ![CI](https://github.com/<your-username>/ask_ai/actions/workflows/ci.yml/badge.svg)
+//!
+//! # ask_ai
+//!
+//! **Continuous Integration and Automatic Publishing**
+//!
+//! This crate is continuously tested and linted using [GitHub Actions](https://github.com/<your-username>/ask_ai/actions/workflows/ci.yml). On every push to the `master` branch, after passing tests and `cargo publish --dry-run`, it is *automatically published* to [crates.io](https://crates.io/crates/ask_ai).
+//!
+//! Documentation is available at [docs.rs/ask_ai](https://docs.rs/ask_ai).
+//!
+//! ---
+
 //! # AI Question-Answering Crate
 //! 
 //! This Rust crate provides a unified way to call different Large Language Model (Framework) providers, 
