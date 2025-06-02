@@ -1,6 +1,6 @@
 //! [![Crates.io](https://img.shields.io/crates/v/ask_ai.svg)](https://crates.io/crates/ask_ai)
 //! [![Docs.rs](https://docs.rs/ask_ai/badge.svg)](https://docs.rs/ask_ai)
-//! ![CI](https://github.com/<your-username>/ask_ai/actions/workflows/ci.yml/badge.svg)
+//! ![CI](https://github.com/EduardoNeville/ask_ai/actions/workflows/ci.yml/badge.svg)
 //!
 //! # ask_ai
 //!
