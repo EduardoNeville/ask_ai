@@ -1,16 +1,12 @@
+use crate::config::{AiConfig, Framework, Question};
+use crate::error::{AppError, Result};
+use ollama_rs::{
+    generation::chat::{request::ChatMessageRequest, ChatMessage, MessageRole},
+    Ollama,
+};
+use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use serde_json::Value;
 use std::env;
-use crate::error::{AppError, Result};
-use crate::config::{AiConfig, Framework, Question};
-use reqwest::header::{AUTHORIZATION, CONTENT_TYPE}; 
-use ollama_rs::{
-    generation::chat::{
-        request::ChatMessageRequest,
-        ChatMessage,
-        MessageRole
-    }, 
-    Ollama
-};
 
 ///### `get_openai_response`
 ///
@@ -28,10 +24,10 @@ use ollama_rs::{
 ///
 ///#### Parameters:
 ///
-///1. `ai_config`: 
+///1. `ai_config`:
 ///   - Contains the user's configurations for the Framework provider, including the OpenAI model to query (`gpt-3.5-turbo`, `gpt-4`, etc.).
 ///
-///2. `question`: 
+///2. `question`:
 ///   - A struct used to specify details about the prompt, context, and user question when querying OpenAI API.
 ///
 ///---
@@ -74,7 +70,11 @@ async fn get_openai_response(question: Question, ai_config: &AiConfig) -> Result
             }
         }
     }
-    let usr_input = if question.new_prompt.is_empty() { ".".to_string() } else { question.new_prompt };
+    let usr_input = if question.new_prompt.is_empty() {
+        ".".to_string()
+    } else {
+        question.new_prompt
+    };
     messages.push(serde_json::json!({
         "role": "user",
         "content": usr_input
@@ -142,9 +142,9 @@ async fn get_openai_response(question: Question, ai_config: &AiConfig) -> Result
 ///
 ///#### Parameters:
 ///
-///1. `question`: 
+///1. `question`:
 ///   - A `Question` struct containing the system prompt, past messages, and user query.
-///2. `ai_config`: 
+///2. `ai_config`:
 ///   - A configuration object specifying the Anthropic Framework model and optional maximum token limit.
 ///
 ///---
@@ -177,15 +177,19 @@ async fn get_anthropic_response(question: Question, ai_config: &AiConfig) -> Res
             }
         }
     }
-    let usr_input = if question.new_prompt.is_empty() { ".".to_string() } else { question.new_prompt };
+    let usr_input = if question.new_prompt.is_empty() {
+        ".".to_string()
+    } else {
+        question.new_prompt
+    };
     messages.push(serde_json::json!({
         "role": "user",
         "content": [{"type": "text", "text": usr_input}]
     }));
 
-    let system_prompt = question
-        .system_prompt
-        .unwrap_or_else(|| "You are a helpful assistant. Answer the question concisely.".to_string());
+    let system_prompt = question.system_prompt.unwrap_or_else(|| {
+        "You are a helpful assistant. Answer the question concisely.".to_string()
+    });
     let max_tokens = ai_config.max_token.unwrap_or(1024);
 
     let payload = serde_json::json!({
@@ -252,9 +256,9 @@ async fn get_anthropic_response(question: Question, ai_config: &AiConfig) -> Res
 ///
 ///#### Parameters:
 ///
-///1. `question`: 
+///1. `question`:
 ///   - A `Question` struct with details of the system prompt, prior conversation, and user input.
-///2. `ai_config`: 
+///2. `ai_config`:
 ///   - Specifies the configured model and parameters for Ollama interaction.
 ///
 ///---
@@ -276,7 +280,8 @@ async fn get_ollama_response(question: Question, ai_config: &AiConfig) -> Result
             images: None,
         });
     } else {
-        let default_sys_prompt = String::from("You are helpful assistant. Answer the question consicely.");
+        let default_sys_prompt =
+            String::from("You are helpful assistant. Answer the question consicely.");
         msgs.push(ChatMessage {
             role: MessageRole::System,
             content: default_sys_prompt,
@@ -323,18 +328,15 @@ async fn get_ollama_response(question: Question, ai_config: &AiConfig) -> Result
         });
     }
 
-
     // Construct the chat completion request with the system and user messages
     let req = ChatMessageRequest::new(ai_config.model.to_owned(), msgs.to_owned());
 
     let result = ollama
         .send_chat_messages_with_history(&mut msgs, req)
         .await
-        .map_err(|e| {
-            AppError::ModelError {
-                model_name: ai_config.model.to_owned(),
-                failure_str: e.to_string(),
-            }
+        .map_err(|e| AppError::ModelError {
+            model_name: ai_config.model.to_owned(),
+            failure_str: e.to_string(),
         })?;
 
     let answer = result.message.content;
@@ -349,4 +351,3 @@ pub async fn ask_question(ai_config: &AiConfig, question: Question) -> Result<St
         Framework::Ollama => get_ollama_response(question, ai_config).await,
     }
 }
-

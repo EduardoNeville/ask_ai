@@ -1,6 +1,6 @@
 use ask_ai::{
-    config::{AiConfig, Framework, Question},
     ask_ai::ask_question,
+    config::{AiConfig, Framework, Question},
     error::AppError,
 };
 use httpmock::prelude::*;
@@ -20,15 +20,20 @@ async fn openai_reqwest_httpmock_success() {
             .body_contains("Say something, please.");
         then.status(200)
             .header("Content-Type", "application/json")
-            .body(r#"{
+            .body(
+                r#"{
                 "choices": [
                     { "message": { "content": "Hello from OpenAI (mock)!" } }
                 ]
-            }"#);
+            }"#,
+            );
     });
 
     env::set_var("OPENAI_API_KEY", "open_api_testkey");
-    env::set_var("OPENAI_API_URL", &format!("{}/v1/chat/completions", server.base_url()));
+    env::set_var(
+        "OPENAI_API_URL",
+        &format!("{}/v1/chat/completions", server.base_url()),
+    );
 
     let ai_config = AiConfig {
         llm: Framework::OpenAI,
@@ -41,7 +46,9 @@ async fn openai_reqwest_httpmock_success() {
         new_prompt: "Say something, please.".to_string(),
     };
 
-    let answer = ask_question(&ai_config, question).await.expect("Should succeed");
+    let answer = ask_question(&ai_config, question)
+        .await
+        .expect("Should succeed");
     mock.assert();
     assert_eq!(answer, "Hello from OpenAI (mock)!");
 
@@ -63,15 +70,20 @@ async fn anthropic_reqwest_httpmock_success() {
             .body_contains("Anthropic question!");
         then.status(200)
             .header("content-type", "application/json")
-            .body(r#"{
+            .body(
+                r#"{
                 "content": [
                     { "text": "Answers from Claude (mock)!" }
                 ]
-            }"#);
+            }"#,
+            );
     });
 
     env::set_var("ANTHROPIC_API_KEY", "anthropic_testkey");
-    env::set_var("ANTHROPIC_API_URL", &format!("{}/v1/messages", server.base_url()));
+    env::set_var(
+        "ANTHROPIC_API_URL",
+        &format!("{}/v1/messages", server.base_url()),
+    );
 
     let ai_config = AiConfig {
         llm: Framework::Anthropic,
@@ -84,7 +96,9 @@ async fn anthropic_reqwest_httpmock_success() {
         new_prompt: "Anthropic question!".to_string(),
     };
 
-    let answer = ask_question(&ai_config, question).await.expect("Should succeed");
+    let answer = ask_question(&ai_config, question)
+        .await
+        .expect("Should succeed");
     mock.assert();
     assert_eq!(answer, "Answers from Claude (mock)!");
 
@@ -98,15 +112,17 @@ async fn openai_reqwest_httpmock_error() {
     let server = MockServer::start();
 
     let mock = server.mock(|when, then| {
-        when.method(POST)
-            .path("/v1/chat/completions");
+        when.method(POST).path("/v1/chat/completions");
         then.status(401)
             .header("Content-Type", "application/json")
             .body(r#"{ "error": "unauthorized" }"#);
     });
 
     env::set_var("OPENAI_API_KEY", "bad_api_key");
-    env::set_var("OPENAI_API_URL", &format!("{}/v1/chat/completions", server.base_url()));
+    env::set_var(
+        "OPENAI_API_URL",
+        &format!("{}/v1/chat/completions", server.base_url()),
+    );
 
     let ai_config = AiConfig {
         llm: Framework::OpenAI,
@@ -120,10 +136,13 @@ async fn openai_reqwest_httpmock_error() {
     };
 
     match ask_question(&ai_config, question).await {
-        Err(AppError::ApiError { model_name, failure_str }) => {
+        Err(AppError::ApiError {
+            model_name,
+            failure_str,
+        }) => {
             assert_eq!(model_name, "openai");
             assert!(failure_str.contains("Status 401"));
-        },
+        }
         other => panic!("Expected AppError::ApiError, got {:?}", other),
     };
     mock.assert();
@@ -138,17 +157,21 @@ async fn anthropic_reqwest_httpmock_error_model_parse() {
     let server = MockServer::start();
 
     let mock = server.mock(|when, then| {
-        when.method(POST)
-            .path("/v1/messages");
+        when.method(POST).path("/v1/messages");
         then.status(200)
             .header("content-type", "application/json")
-            .body(r#"{
+            .body(
+                r#"{
                 "content": []
-            }"#); // No text, causes ModelError in parsing
+            }"#,
+            ); // No text, causes ModelError in parsing
     });
 
     env::set_var("ANTHROPIC_API_KEY", "badkey");
-    env::set_var("ANTHROPIC_API_URL", &format!("{}/v1/messages", server.base_url()));
+    env::set_var(
+        "ANTHROPIC_API_URL",
+        &format!("{}/v1/messages", server.base_url()),
+    );
 
     let ai_config = AiConfig {
         llm: Framework::Anthropic,
@@ -162,10 +185,13 @@ async fn anthropic_reqwest_httpmock_error_model_parse() {
     };
 
     match ask_question(&ai_config, question).await {
-        Err(AppError::ModelError { model_name, failure_str }) => {
+        Err(AppError::ModelError {
+            model_name,
+            failure_str,
+        }) => {
             assert_eq!(model_name, "claude-2");
             assert!(failure_str.contains("Failed to extract content"));
-        },
+        }
         other => panic!("Expected AppError::ModelError, got {:?}", other),
     };
     mock.assert();

@@ -19,11 +19,25 @@ impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             AppError::UnexpectedError(msg) => write!(f, "Unexpected or unknown error: {}", msg),
-            AppError::ModelError { model_name, failure_str } => {
-                write!(f, "Error requesting answer from {}. Error: {}", model_name, failure_str)
+            AppError::ModelError {
+                model_name,
+                failure_str,
+            } => {
+                write!(
+                    f,
+                    "Error requesting answer from {}. Error: {}",
+                    model_name, failure_str
+                )
             }
-            AppError::ApiError { model_name, failure_str } => {
-                write!(f, "Error loading API {}. Error: {}", model_name, failure_str)
+            AppError::ApiError {
+                model_name,
+                failure_str,
+            } => {
+                write!(
+                    f,
+                    "Error loading API {}. Error: {}",
+                    model_name, failure_str
+                )
             }
         }
     }
