@@ -153,7 +153,7 @@ async fn get_openai_response(question: Question, ai_config: &AiConfig) -> Result
 ///
 ///This function is also internal and should not be called directly. Use invocation through `ask_question`.
 ///
-async fn get_anthropic_response(question: Question, ai_config: &AiConfig) -> Result<String> {
+pub async fn get_anthropic_response(question: Question, ai_config: &AiConfig) -> Result<String> {
     let api_key = env::var("ANTHROPIC_API_KEY").map_err(|e| AppError::ApiError {
         model_name: ai_config.llm.to_string(),
         failure_str: format!("Missing or invalid ANTHROPIC_API_KEY: {}", e),
@@ -187,9 +187,7 @@ async fn get_anthropic_response(question: Question, ai_config: &AiConfig) -> Res
         "content": [{"type": "text", "text": usr_input}]
     }));
 
-    let system_prompt = question.system_prompt.unwrap_or_else(|| {
-        "You are a helpful assistant. Answer the question concisely.".to_string()
-    });
+    let system_prompt = question.system_prompt.unwrap_or_else(|| {String::from("")});
     let max_tokens = ai_config.max_token.unwrap_or(1024);
 
     let payload = serde_json::json!({
@@ -280,8 +278,7 @@ async fn get_ollama_response(question: Question, ai_config: &AiConfig) -> Result
             images: None,
         });
     } else {
-        let default_sys_prompt =
-            String::from("You are helpful assistant. Answer the question consicely.");
+        let default_sys_prompt = String::from("");
         msgs.push(ChatMessage {
             role: MessageRole::System,
             content: default_sys_prompt,
