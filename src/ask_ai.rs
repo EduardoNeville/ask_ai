@@ -7,6 +7,10 @@ use ollama_rs::{
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use serde_json::Value;
 use std::env;
+use anthropic_api::{
+    messages::*,
+    Credentials,
+};
 
 ///### `get_openai_response`
 ///
@@ -154,86 +158,76 @@ async fn get_openai_response(question: Question, ai_config: &AiConfig) -> Result
 ///This function is also internal and should not be called directly. Use invocation through `ask_question`.
 ///
 pub async fn get_anthropic_response(question: Question, ai_config: &AiConfig) -> Result<String> {
-    let api_key = env::var("ANTHROPIC_API_KEY").map_err(|e| AppError::ApiError {
-        model_name: ai_config.llm.to_string(),
-        failure_str: format!("Missing or invalid ANTHROPIC_API_KEY: {}", e),
-    })?;
+    // --- Map our config to anthropic_api types ---
+    let credentials = Credentials::from_env();
 
-    // Build messages array
-    let mut messages = vec![];
-    if let Some(prev_messages) = question.messages {
-        for msg in prev_messages.iter() {
-            if !msg.content.is_empty() {
-                messages.push(serde_json::json!({
-                    "role": "user",
-                    "content": [{"type": "text", "text": msg.content}]
-                }));
+    // Compose chat messages as expected by anthropic_api
+    let mut messages = Vec::new();
+
+    // Insert previous conversation context if any.
+    if let Some(prev_messages) = &question.messages {
+        for m in prev_messages {
+            if !m.content.is_empty() {
+                messages.push(Message {
+                    role: anthropic_api::messages::MessageRole::User,
+                    content: MessageContent::Text(m.content.clone()),
+                });
             }
-            if !msg.output.is_empty() {
-                messages.push(serde_json::json!({
-                    "role": "assistant",
-                    "content": [{"type": "text", "text": msg.output}]
-                }));
+            if !m.output.is_empty() {
+                messages.push(Message {
+                    role: anthropic_api::messages::MessageRole::Assistant,
+                    content: MessageContent::Text(m.output.clone()),
+                });
             }
         }
     }
-    let usr_input = if question.new_prompt.is_empty() {
+
+    // New user prompt
+    let user_input = if question.new_prompt.is_empty() {
         ".".to_string()
     } else {
-        question.new_prompt
+        question.new_prompt.clone()
     };
-    messages.push(serde_json::json!({
-        "role": "user",
-        "content": [{"type": "text", "text": usr_input}]
-    }));
 
-    let system_prompt = question.system_prompt.unwrap_or_else(|| {String::from("")});
-    let max_tokens = ai_config.max_token.unwrap_or(1024);
-
-    let payload = serde_json::json!({
-        "model": ai_config.model,
-        "max_tokens": max_tokens,
-        "messages": messages,
-        "system": system_prompt
+    // Optionally prepend system prompt as the very first user message
+    if let Some(sys) = &question.system_prompt {
+        if !sys.is_empty() {
+            messages.insert(0, Message {
+                role: anthropic_api::messages::MessageRole::User,
+                content: MessageContent::Text(sys.clone()),
+            });
+        }
+    }
+    // Add user input now (after system prompt)
+    messages.push(Message {
+        role: anthropic_api::messages::MessageRole::User,
+        content: MessageContent::Text(user_input.clone()),
     });
 
-    let api_url = env::var("ANTHROPIC_API_URL")
-        .unwrap_or_else(|_| "https://api.anthropic.com/v1/messages".to_string());
+    // --- Call the API ---
+    let max_tokens = ai_config.max_token.unwrap_or(1024);
+    let builder = MessagesBuilder::builder(
+        &ai_config.model,
+        messages.clone(),
+        max_tokens.into(),
+    ).credentials(credentials);
 
-    let resp = reqwest::Client::new()
-        .post(&api_url)
-        .header("x-api-key", api_key)
-        .header("anthropic-version", "2023-06-01")
-        .header(CONTENT_TYPE, "application/json")
-        .json(&payload)
-        .send()
-        .await
-        .map_err(|e| AppError::ApiError {
-            model_name: ai_config.llm.to_string(),
-            failure_str: format!("Request error: {}", e),
-        })?;
-
-    if !resp.status().is_success() {
-        let status = resp.status();
-        let err_body = resp.text().await.unwrap_or_default();
-        return Err(AppError::ApiError {
-            model_name: ai_config.llm.to_string(),
-            failure_str: format!("Status {}: {}", status, err_body),
-        });
-    }
-
-    let response: Value = resp.json().await.map_err(|e| AppError::ModelError {
-        model_name: ai_config.model.to_string(),
-        failure_str: format!("Failed to parse JSON response: {}", e),
+    let response = builder.create().await.map_err(|e| AppError::ApiError {
+        model_name: ai_config.llm.to_string(),
+        failure_str: format!("Anthropic API error: {e}"),
     })?;
 
-    let answer = response["content"][0]["text"]
-        .as_str()
-        .ok_or_else(|| AppError::ModelError {
-            model_name: ai_config.model.to_string(),
-            failure_str: "Failed to extract content from Anthropic response".to_string(),
-        })?
-        .to_string();
+    // Extract text response
+    let answer = response.content.iter().find_map(|block| {
+        if let ResponseContentBlock::Text { text } = block {
+            Some(text.trim().to_owned())
+        } else {
+            None
+        }
+    }).ok_or_else(|| AppError::ModelError {
+        model_name: ai_config.model.clone(),
+        failure_str: "Failed to extract content from Anthropic response".to_string(),
+    })?;
 
     Ok(answer)
 }

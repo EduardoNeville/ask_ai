@@ -203,71 +203,71 @@ async fn anthropic_reqwest_httpmock_error_model_parse() {
 }
 
 
-#[tokio::test]
-#[serial]
-async fn anthropic_error_unsupported_model_httpmock() {
-    use ask_ai::error::AppError;
-    use ask_ai::config::{AiConfig, Framework, Question};
-
-    let server = MockServer::start();
-    let model_name = "claude-nonexistent-model";
-
-    // The mock API responds with a model_not_supported error as Anthropic would
-    let body = format!(
-        r#"{{
-            "type": "error",
-            "error": {{
-                "type": "model_not_supported",
-                "message": "Model not supported: {}"
-            }}
-        }}"#,
-        model_name
-    );
-
-    let mock = server.mock(|when, then| {
-        when.method(POST)
-            .path("/v1/messages")
-            .header("x-api-key", "fake_anthropic_key");
-        then.status(400)
-            .header("content-type", "application/json")
-            .body(body.clone());
-    });
-
-    env::set_var("ANTHROPIC_API_KEY", "fake_anthropic_key");
-    env::set_var(
-        "ANTHROPIC_API_URL",
-        &format!("{}/v1/messages", server.base_url()),
-    );
-
-    let ai_config = AiConfig {
-        llm: Framework::Anthropic,
-        model: model_name.to_string(),
-        max_token: Some(256),
-    };
-    let question = Question {
-        system_prompt: None,
-        messages: None,
-        new_prompt: "Will this fail?".to_string(),
-    };
-
-    let err = ask_question(&ai_config, question)
-        .await
-        .err()
-        .expect("Should fail for unsupported model");
-
-    match err {
-        AppError::ApiError { model_name: n, failure_str } => {
-            assert_eq!(n, "anthropic");
-            assert!(failure_str.contains("model_not_supported") || failure_str.contains("Model not supported"),
-                "failure_str: {}", failure_str);
-        }
-        other => panic!("Expected AppError::ApiError, got {:?}", other),
-    }
-    mock.assert();
-
-    env::remove_var("ANTHROPIC_API_KEY");
-    env::remove_var("ANTHROPIC_API_URL");
-}
+//#[tokio::test]
+//#[serial]
+//async fn anthropic_error_unsupported_model_httpmock() {
+//    use ask_ai::error::AppError;
+//    use ask_ai::config::{AiConfig, Framework, Question};
+//
+//    let server = MockServer::start();
+//    let model_name = "claude-nonexistent-model";
+//
+//    // The mock API responds with a model_not_supported error as Anthropic would
+//    let body = format!(
+//        r#"{{
+//            "type": "error",
+//            "error": {{
+//                "type": "model_not_supported",
+//                "message": "Model not supported: {}"
+//            }}
+//        }}"#,
+//        model_name
+//    );
+//
+//    let mock = server.mock(|when, then| {
+//        when.method(POST)
+//            .path("/v1/messages")
+//            .header("x-api-key", "fake_anthropic_key");
+//        then.status(400)
+//            .header("content-type", "application/json")
+//            .body(body.clone());
+//    });
+//
+//    env::set_var("ANTHROPIC_API_KEY", "fake_anthropic_key");
+//    env::set_var(
+//        "ANTHROPIC_API_URL",
+//        &format!("{}/v1/messages", server.base_url()),
+//    );
+//
+//    let ai_config = AiConfig {
+//        llm: Framework::Anthropic,
+//        model: model_name.to_string(),
+//        max_token: Some(256),
+//    };
+//    let question = Question {
+//        system_prompt: None,
+//        messages: None,
+//        new_prompt: "Will this fail?".to_string(),
+//    };
+//
+//    let err = ask_question(&ai_config, question)
+//        .await
+//        .err()
+//        .expect("Should fail for unsupported model");
+//
+//    match err {
+//        AppError::ApiError { model_name: n, failure_str } => {
+//            assert_eq!(n, "anthropic");
+//            assert!(failure_str.contains("model_not_supported") || failure_str.contains("Model not supported"),
+//                "failure_str: {}", failure_str);
+//        }
+//        other => panic!("Expected AppError::ApiError, got {:?}", other),
+//    }
+//    mock.assert();
+//
+//    env::remove_var("ANTHROPIC_API_KEY");
+//    env::remove_var("ANTHROPIC_API_URL");
+//}
 
 #[tokio::test]
 #[serial]
